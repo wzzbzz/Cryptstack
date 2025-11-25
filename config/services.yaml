@@ -1,20 +1,29 @@
-# This file is the entry point to configure your own services.
-# Files in the packages/ subdirectory configure your dependencies.
+# config/services.yaml
 
-# Put parameters here that don't need to change on each machine where the app is deployed
-# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    nativex.config_file: '%kernel.project_dir%/config/nativex/config.cfg'
+    nativex.pi_file: '%kernel.project_dir%/config/nativex/pi10000.txt'
 
 services:
-    # default configuration for services in *this* file
     _defaults:
-        autowire: true      # Automatically injects dependencies in your services.
-        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        autowire: true
+        autoconfigure: true
+        public: false
 
-    # makes classes in src/ available to be used as services
-    # this creates a service per class whose id is the fully-qualified class name
+    # Commands, Controllers, and Services all autodiscovered
     App\:
         resource: '../src/'
+        exclude:
+            - '../src/Kernel.php'
+            - '../src/DependencyInjection/'
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+    # Override specific services with manual args
+    App\Service\NativeX\ConfigLoader:
+        arguments:
+            $configFile: '%nativex.config_file%'
+            $piFile: '%nativex.pi_file%'
+
+    App\Service\NativeX\NativeX:
+        factory: [App\Service\NativeX\NativeX, 'build']
+        arguments:
+            - '@App\Service\NativeX\ConfigLoader'
