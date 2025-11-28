@@ -350,51 +350,90 @@ function loadCribTable() {
     });
 }
 
-// ---- BUILD STACK LIST ----
 function renderStack() {
     const ul = document.getElementById("stack-list");
     ul.innerHTML = "";
 
-    currentStack.forEach(method => {
+    currentStack.forEach((method, index) => {
         const li = document.createElement("li");
+        li.dataset.index = index;
+        li.textContent = method;
+
+        const remove = document.createElement("span");
+        remove.className = "remove";
+        remove.textContent = "✕";
+        li.appendChild(remove);
+
+        remove.addEventListener("click", () => {
+            currentStack.splice(index, 1);
+            renderStack();
+        });
+
+        // ---- DESKTOP DRAG ----
         li.draggable = true;
-        li.dataset.method = method;
 
-        li.innerHTML = `
-            ${method}
-            <span class="remove">✕</span>
-        `;
-
-        // Remove button
-        li.querySelector(".remove").addEventListener("click", () => {
-            currentStack = currentStack.filter(m => m !== method);
-            renderStack();
+        li.addEventListener("dragstart", (e) => {
+            e.dataTransfer.setData("index", index);
+            li.classList.add("dragging");
         });
 
-        // Drag events
-        li.addEventListener("dragstart", e => {
-            e.dataTransfer.setData("method", method);
-            e.dataTransfer.effectAllowed = "move";
+        li.addEventListener("dragend", () => {
+            li.classList.remove("dragging");
         });
 
-        li.addEventListener("dragover", e => e.preventDefault());
-
-        li.addEventListener("drop", e => {
+        li.addEventListener("dragover", (e) => {
             e.preventDefault();
-            const dragged = e.dataTransfer.getData("method");
+        });
 
-            const fromIndex = currentStack.indexOf(dragged);
-            const toIndex = currentStack.indexOf(method);
+        li.addEventListener("drop", (e) => {
+            e.preventDefault();
+            const from = parseInt(e.dataTransfer.getData("index"), 10);
+            const to = index;
+            moveItem(from, to);
+        });
 
-            currentStack.splice(fromIndex, 1);
-            currentStack.splice(toIndex, 0, dragged);
+        // ---- MOBILE TOUCH DRAG ----
+        let startY = 0;
+        let startIndex = index;
 
-            renderStack();
+        li.addEventListener("touchstart", (e) => {
+            startY = e.touches[0].clientY;
+            startIndex = index;
+            li.classList.add("dragging");
+        });
+
+        li.addEventListener("touchmove", (e) => {
+            e.preventDefault();
+
+            const touchY = e.touches[0].clientY;
+            const delta = touchY - startY;
+
+            const items = [...ul.children];
+            const newIndex = Math.min(
+                items.length - 1,
+                Math.max(0, startIndex + Math.round(delta / 40)) // 40px per item
+            );
+
+            if (newIndex !== startIndex) {
+                moveItem(startIndex, newIndex);
+                startIndex = newIndex;
+            }
+        });
+
+        li.addEventListener("touchend", () => {
+            li.classList.remove("dragging");
         });
 
         ul.appendChild(li);
     });
+
+    function moveItem(from, to) {
+        const item = currentStack.splice(from, 1)[0];
+        currentStack.splice(to, 0, item);
+        renderStack();
+    }
 }
+
 
 // ---- ADD NEW LAYER ----
 document.getElementById("add-layer").addEventListener("change", e => {
