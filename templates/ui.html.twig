@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NativeX Testbed</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 28px;
+        }
+
+        #container {
+            display: flex;
+            gap: 20px;
+        }
+
+        /* Left column (crib sheet) */
+        #crib {
+            width: 60%;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            overflow: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border-bottom: 1px solid #ddd;
+            padding: 8px 6px;
+        }
+
+        th {
+            background: #eee;
+        }
+
+        .status-ok {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status-fail {
+            color: red;
+            font-weight: bold;
+        }
+
+        /* Right column (stack builder) */
+        #stack-ui {
+            width: 40%;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        #stack-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        #stack-list li {
+            padding: 8px;
+            background: #e8e8e8;
+            margin: 6px 0;
+            border-radius: 6px;
+            cursor: move;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remove {
+            cursor: pointer;
+            color: #900;
+            font-weight: bold;
+        }
+
+        #add-layer {
+            margin-top: 10px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<h1>NativeX Cipher Testbed</h1>
+
+<div id="container">
+
+    <!-- LEFT COLUMN: CRIB SHEET -->
+    <div id="crib">
+        <h2>Crib Sheet</h2>
+        <table id="crib-table">
+            <thead>
+            <tr>
+                <th>Plaintext</th>
+                <th>Original Cipher</th>
+                <th>Output</th>
+                <th>Status</th>
+            </tr>
+            </thead>
+            <tbody id="crib-body">
+            <!-- Filled by JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- RIGHT COLUMN: STACK BUILDER -->
+    <div id="stack-ui">
+        <h2>Stack Builder</h2>
+
+        <ul id="stack-list">
+            <!-- Draggable items filled by JS -->
+        </ul>
+
+        <select id="add-layer">
+            <option value="">Add layer...</option>
+            <option>shell_shock</option>
+            <option>pi_shuffle</option>
+            <option>swap_tip</option>
+            <option>split_deck</option>
+            <option>straight_shuffle</option>
+            <option>bandit</option>
+        </select>
+
+        <button id="run-batch">Run Batch</button>
+    </div>
+
+</div>
+
+<script>
+// ---- CRIB SHEET DATA (Modify as needed) ----
+const cribData = [
+    { plain: "A", cipher: "P" },
+    { plain: "AA", cipher: "RJ" },
+    { plain: "ABC", cipher: "TIL" },
+    { plain: "AAAAAAAAAA", cipher: "bVX^hX^VV@" },
+    { plain: "!@#$%^&*()_+-=[]{}|;':\",.<>/?`~", cipher: ">k>3HDWF..." }
+];
+
+// ---- INITIAL STACK ----
+let currentStack = ["shell_shock", "pi_shuffle"];
+
+// ---- BUILD CRIB TABLE ----
+function loadCribTable() {
+    const tbody = document.getElementById('crib-body');
+    tbody.innerHTML = "";
+
+    cribData.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${row.plain}</td>
+            <td>${row.cipher}</td>
+            <td class="output"></td>
+            <td class="status"></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// ---- BUILD STACK LIST ----
+function renderStack() {
+    const ul = document.getElementById("stack-list");
+    ul.innerHTML = "";
+
+    currentStack.forEach(method => {
+        const li = document.createElement("li");
+        li.draggable = true;
+        li.dataset.method = method;
+
+        li.innerHTML = `
+            ${method}
+            <span class="remove">✕</span>
+        `;
+
+        // Remove button
+        li.querySelector(".remove").addEventListener("click", () => {
+            currentStack = currentStack.filter(m => m !== method);
+            renderStack();
+        });
+
+        // Drag events
+        li.addEventListener("dragstart", e => {
+            e.dataTransfer.setData("method", method);
+            e.dataTransfer.effectAllowed = "move";
+        });
+
+        li.addEventListener("dragover", e => e.preventDefault());
+
+        li.addEventListener("drop", e => {
+            e.preventDefault();
+            const dragged = e.dataTransfer.getData("method");
+
+            const fromIndex = currentStack.indexOf(dragged);
+            const toIndex = currentStack.indexOf(method);
+
+            currentStack.splice(fromIndex, 1);
+            currentStack.splice(toIndex, 0, dragged);
+
+            renderStack();
+        });
+
+        ul.appendChild(li);
+    });
+}
+
+// ---- ADD NEW LAYER ----
+document.getElementById("add-layer").addEventListener("change", e => {
+    const layer = e.target.value;
+    if (!layer) return;
+
+    currentStack.push(layer);
+    renderStack();
+    e.target.value = "";
+});
+
+// ---- RUN BATCH ----
+document.getElementById("run-batch").addEventListener("click", async () => {
+
+    const items = cribData.map(x => x.plain);
+
+    const response = await fetch("/batch", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            mode: "encode",
+            stack: currentStack,
+            items: items
+        })
+    });
+
+    const json = await response.json();
+
+    updateCribTable(json.results);
+});
+
+// ---- UPDATE CRIB TABLE WITH RESULTS ----
+function updateCribTable(results) {
+    const rows = document.querySelectorAll("#crib-body tr");
+
+    results.forEach((res, i) => {
+        const row = rows[i];
+        const outputCell = row.querySelector(".output");
+        const statusCell = row.querySelector(".status");
+
+        outputCell.innerText = res.output;
+
+        if (res.output === cribData[i].cipher) {
+            statusCell.innerHTML = "<span class='status-ok'>✓</span>";
+        } else {
+            statusCell.innerHTML = "<span class='status-fail'>✗</span>";
+        }
+    });
+}
+
+// ---- INITIALIZE ----
+loadCribTable();
+renderStack();
+</script>
+
+</body>
+</html>

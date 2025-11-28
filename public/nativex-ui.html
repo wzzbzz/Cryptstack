@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NativeX Testbed</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 28px;
+        }
+
+        #container {
+            display: flex;
+            gap: 20px;
+        }
+
+        /* Left column (crib sheet) */
+        #crib {
+            width: 60%;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            overflow: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border-bottom: 1px solid #ddd;
+            padding: 8px 6px;
+        }
+
+        th {
+            background: #eee;
+        }
+
+        .status-ok {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status-fail {
+            color: red;
+            font-weight: bold;
+        }
+
+        /* Right column (stack builder) */
+        #stack-ui {
+            width: 40%;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        #stack-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        #stack-list li {
+            padding: 8px;
+            background: #e8e8e8;
+            margin: 6px 0;
+            border-radius: 6px;
+            cursor: move;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remove {
+            cursor: pointer;
+            color: #900;
+            font-weight: bold;
+        }
+
+        #add-layer {
+            margin-top: 10px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<h1>NativeX Cipher Testbed</h1>
+
+<div id="container">
+
+    <!-- LEFT COLUMN: CRIB SHEET -->
+    <div id="crib">
+        <h2>Crib Sheet</h2>
+        <table id="crib-table">
+            <thead>
+            <tr>
+                <th>Plaintext</th>
+                <th>Ciphertext</th>
+                <th>Decode Valid</th>
+            </tr>
+            </thead>
+            <tbody id="crib-body">
+            <!-- Filled by JS -->
+            </tbody>
+        </table>
+        <button id="copy-json">Copy JSON</button>
+    </div>
+
+    <!-- RIGHT COLUMN: STACK BUILDER -->
+    <div id="stack-ui">
+        <h2>Key</h2>
+        <input type="text" id="key-input" placeholder="Enter key..." style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;">
+
+        <h2>Stack Builder</h2>
+
+        <ul id="stack-list">
+            <!-- Draggable items filled by JS -->
+        </ul>
+
+        <select id="add-layer">
+            <option value="">Add layer...</option>
+            <option>shell_shock</option>
+            <option>pi_shuffle</option>
+            <option>swap_tip</option>
+            <option>split_deck</option>
+            <option>straight_shuffle</option>
+            <option>bandit</option>
+        </select>
+
+        <button id="run-batch">Run Batch</button>
+
+        <h2>Encode</h2>
+        <div>
+            <input type="text" id="encode-input" placeholder="Enter text to encode..." style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;">
+            <button id="encode-submit">Encode</button>
+            <div id="encode-output" style="margin-top: 10px; padding: 10px; background: #f9f9f9; border-radius: 4px; min-height: 30px;"></div>
+            <button id="copy-encoded" style="margin-left: 10px;">Copy to Clipboard</button>
+        </div>
+
+        <h2>Decode</h2>
+        <div>
+            <input type="text" id="decode-input" placeholder="Enter text to decode..." style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;">
+            <button id="decode-submit">Decode</button>
+            <div id="decode-output" style="margin-top: 10px; padding: 10px; background: #f9f9f9; border-radius: 4px; min-height: 30px;"></div>
+            <button id="copy-decoded" style="margin-left: 10px;">Copy to Clipboard</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// ---- CRIB SHEET DATA (Modify as needed) ----
+const cribData = [
+    {plain:"A", cipher:""},
+
+    {plain:"AA", cipher:""},
+    {plain:"ABC", cipher:""},
+    {plain:"AAAAAAAAAA", cipher:""},
+    {plain:"!@#$%^&*()_+-=[]{}|;':\",.<>/?`~", cipher:""},
+    {plain:"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", cipher:""},
+    {plain:"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", cipher:""},
+    {plain:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()", cipher:""},
+    {plain:".............................................", cipher:""},
+    {plain:"X............................................", cipher:""},
+    {plain:".X...........................................", cipher:""},
+    {plain:"..X..........................................", cipher:""},
+    {plain:"...X.........................................", cipher:""},
+    {plain:"....X........................................", cipher:""},
+    {plain:".....X.......................................", cipher:""},
+    {plain:"......X......................................", cipher:""},
+    {plain:".......X.....................................", cipher:""},
+    {plain:"........X....................................", cipher:""},
+    {plain:".........X...................................", cipher:""},
+    {plain:"..........X..................................", cipher:""},
+    {plain:"...........X.................................", cipher:""},
+    {plain:"............X................................", cipher:""},
+    {plain:".............X...............................", cipher:""},
+    {plain:"..............X..............................", cipher:""},
+    {plain:"...............X.............................", cipher:""},
+    {plain:"................X............................", cipher:""},
+    {plain:".................X...........................", cipher:""},
+    {plain:"..................X..........................", cipher:""},
+    {plain:"...................X.........................", cipher:""},
+    {plain:"....................X........................", cipher:""},
+    {plain:".....................X.......................", cipher:""},
+    {plain:"......................X......................", cipher:""},
+    {plain:".......................X.....................", cipher:""},
+    {plain:"........................X....................", cipher:""},
+    {plain:".........................X...................", cipher:""},
+    {plain:"..........................X..................", cipher:""},
+    {plain:"...........................X.................", cipher:""},
+    {plain:"............................X................", cipher:""},
+    {plain:".............................X...............", cipher:""},
+    {plain:"..............................X..............", cipher:""},
+    {plain:"...............................X.............", cipher:""},
+    {plain:"................................X............", cipher:""},
+    {plain:".................................X...........", cipher:""},
+    {plain:"..................................X..........", cipher:""},
+    {plain:"...................................X.........", cipher:""},
+    {plain:"....................................X........", cipher:""},
+    {plain:".....................................X.......", cipher:""},
+    {plain:"......................................X......", cipher:""},
+    {plain:".......................................X.....", cipher:""},
+    {plain:"........................................X....", cipher:""},
+    {plain:".........................................X...", cipher:""},
+    {plain:"..........................................X..", cipher:""},
+    {plain:"...........................................X.", cipher:""},
+    {plain:"............................................X", cipher:""},
+    {plain:" ", cipher:""},
+    {plain:"!", cipher:""},
+    {plain:"\"", cipher:""},
+    {plain:"#", cipher:""},
+    {plain:"$", cipher:""},
+    {plain:"%", cipher:""},
+    {plain:"&", cipher:""},
+    {plain:"'", cipher:""},
+    {plain:"(", cipher:""},
+    {plain:")", cipher:""},
+    {plain:"*", cipher:""},
+    {plain:"+", cipher:""},
+    {plain:",", cipher:""},
+    {plain:"-", cipher:""},
+    {plain:".", cipher:""},
+    {plain:"/", cipher:""},
+    {plain:"0", cipher:""},
+    {plain:"1", cipher:""},
+    {plain:"2", cipher:""},
+    {plain:"3", cipher:""},
+    {plain:"4", cipher:""},
+    {plain:"5", cipher:""},
+    {plain:"6", cipher:""},
+    {plain:"7", cipher:""},
+    {plain:"8", cipher:""},
+    {plain:"9", cipher:""},
+    {plain:":", cipher:""},
+    {plain:";", cipher:""},
+    {plain:"<", cipher:""},
+    {plain:"=", cipher:""},
+    {plain:">", cipher:""},
+    {plain:"?", cipher:""},
+    {plain:"@", cipher:""},
+    {plain:"A", cipher:""},
+    {plain:"B", cipher:""},
+    {plain:"C", cipher:""},
+    {plain:"D", cipher:""},
+    {plain:"E", cipher:""},
+    {plain:"F", cipher:""},
+    {plain:"G", cipher:""},
+    {plain:"H", cipher:""},
+    {plain:"I", cipher:""},
+    {plain:"J", cipher:""},
+    {plain:"K", cipher:""},
+    {plain:"L", cipher:""},
+    {plain:"M", cipher:""},
+    {plain:"N", cipher:""},
+    {plain:"O", cipher:""},
+    {plain:"P", cipher:""},
+    {plain:"Q", cipher:""},
+    {plain:"R", cipher:""},
+    {plain:"S", cipher:""},
+    {plain:"T", cipher:""},
+    {plain:"U", cipher:""},
+    {plain:"V", cipher:""},
+    {plain:"W", cipher:""},
+    {plain:"X", cipher:""},
+    {plain:"Y", cipher:""},
+    {plain:"Z", cipher:""},
+    {plain:"[", cipher:""},
+    {plain:"\\", cipher:""},
+    {plain:"]", cipher:""},
+    {plain:"^", cipher:""},
+    {plain:"_", cipher:""},
+    {plain:"`", cipher:""},
+    {plain:"a", cipher:""},
+    {plain:"b", cipher:""},
+    {plain:"c", cipher:""},
+    {plain:"d", cipher:""},
+    {plain:"e", cipher:""},
+    {plain:"f", cipher:""},
+    {plain:"g", cipher:""},
+    {plain:"h", cipher:""},
+    {plain:"i", cipher:""},
+    {plain:"j", cipher:""},
+    {plain:"k", cipher:""},
+    {plain:"l", cipher:""},
+    {plain:"m", cipher:""},
+    {plain:"n", cipher:""},
+    {plain:"o", cipher:""},
+    {plain:"p", cipher:""},
+    {plain:"q", cipher:""},
+    {plain:"r", cipher:""},
+    {plain:"s", cipher:""},
+    {plain:"t", cipher:""},
+    {plain:"u", cipher:""},
+    {plain:"v", cipher:""},
+    {plain:"w", cipher:""},
+    {plain:"x", cipher:""},
+    {plain:"y", cipher:""},
+    {plain:"z", cipher:""},
+    {plain:"{", cipher:""},
+    {plain:"|", cipher:""},
+    {plain:"}", cipher:""},
+    {plain:"~", cipher:""}
+]
+
+
+// ---- INITIAL STACK ----
+let currentStack = ["pi_shuffle", "shell_shock", "bandit"];
+
+// ---- BUILD CRIB TABLE ----
+function loadCribTable() {
+    const tbody = document.getElementById('crib-body');
+    tbody.innerHTML = "";
+
+    cribData.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${row.plain}</td>
+            <td class="cipher">${row.cipher}</td>
+            <td class="decoded">${row.decoded || ""}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// ---- BUILD STACK LIST ----
+function renderStack() {
+    const ul = document.getElementById("stack-list");
+    ul.innerHTML = "";
+
+    currentStack.forEach(method => {
+        const li = document.createElement("li");
+        li.draggable = true;
+        li.dataset.method = method;
+
+        li.innerHTML = `
+            ${method}
+            <span class="remove">✕</span>
+        `;
+
+        // Remove button
+        li.querySelector(".remove").addEventListener("click", () => {
+            currentStack = currentStack.filter(m => m !== method);
+            renderStack();
+        });
+
+        // Drag events
+        li.addEventListener("dragstart", e => {
+            e.dataTransfer.setData("method", method);
+            e.dataTransfer.effectAllowed = "move";
+        });
+
+        li.addEventListener("dragover", e => e.preventDefault());
+
+        li.addEventListener("drop", e => {
+            e.preventDefault();
+            const dragged = e.dataTransfer.getData("method");
+
+            const fromIndex = currentStack.indexOf(dragged);
+            const toIndex = currentStack.indexOf(method);
+
+            currentStack.splice(fromIndex, 1);
+            currentStack.splice(toIndex, 0, dragged);
+
+            renderStack();
+        });
+
+        ul.appendChild(li);
+    });
+}
+
+// ---- ADD NEW LAYER ----
+document.getElementById("add-layer").addEventListener("change", e => {
+    const layer = e.target.value;
+    if (!layer) return;
+
+    currentStack.push(layer);
+    renderStack();
+    e.target.value = "";
+});
+
+// ---- RUN BATCH ----
+document.getElementById("run-batch").addEventListener("click", async () => {
+
+    const items = cribData.map(x => x.plain);
+
+    
+    const results = [];
+    console.log("start");
+    console.log(items.length+" items");
+    for (const item of items) {
+        // stack send comma separated string
+        const stackString = currentStack.join(",");
+        const response = await fetch("/encode", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                stack: stackString,
+                text: item,
+                key: document.getElementById("key-input").value
+            })
+        });
+        
+        const json = await response.json();
+
+        //now decode using encoded, to verify that it's working
+        const decodeResponse = await fetch("/decode", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                stack: stackString,
+                text: json.encoded,
+                key: document.getElementById("key-input").value
+            })
+        });
+        const decodeJson = await decodeResponse.json();
+        results.push({ output: json.encoded, decoded: decodeJson.decoded });
+    }
+    console.log("done");
+
+    updateCribTable(results);
+    updateCribData(results);
+});
+
+// ---- UPDATE CRIB TABLE WITH RESULTS ----
+function updateCribTable(results) {
+    const rows = document.querySelectorAll("#crib-body tr");
+
+    results.forEach((res, i) => {
+
+        console.log(res);
+        const row = rows[i];
+        
+        const outputCell = row.querySelector(".cipher");
+
+        outputCell.textContent = res.output;
+
+        // put a green check in the "decoded" column if it matches the plain text
+        const decodedCell = row.querySelector(".decoded");
+        if (res.decoded === cribData[i].plain) {
+            decodedCell.innerHTML = `<span class="status-ok">✔</span>`;
+        } else {
+            decodedCell.innerHTML = `<span class="status-fail">✘</span>`;
+        }
+        
+    });
+}
+
+// ---- UPDATE CRIB DATA WITH RESULTS ----
+function updateCribData(results) {
+    results.forEach((res, i) => {
+        cribData[i].cipher = res.output;
+    });
+}
+
+
+// ---- ENCODE SINGLE INPUT ----
+document.getElementById("encode-submit").addEventListener("click", async () => {
+    const inputText = document.getElementById("encode-input").value;
+    if (!inputText) return;
+    const stackString = currentStack.join(",");
+    const response = await fetch("/encode", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            stack: stackString,
+            text: inputText,
+            key: document.getElementById("key-input").value
+        })
+    });
+    const json = await response.json();
+    document.getElementById("encode-output").textContent = json.encoded;
+});
+// ---- COPY TO CLIPBOARD ----
+document.getElementById("copy-encoded").addEventListener("click", () => {
+    const outputText = document.getElementById("encode-output").textContent;
+    if (!outputText) return;
+    navigator.clipboard.writeText(outputText).then(() => {
+        alert("Encoded text copied to clipboard!");
+    });
+});
+
+// ---- DECODE SINGLE INPUT ----
+document.getElementById("decode-submit").addEventListener("click", async () => {
+    const inputText = document.getElementById("decode-input").value;
+    if (!inputText) return;
+    const stackString = currentStack.join(",");
+    const response = await fetch("/decode", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            stack: stackString,
+            text: inputText,
+            key: document.getElementById("key-input").value
+        })
+    });
+    const json = await response.json();
+    document.getElementById("decode-output").textContent = json.decoded;
+});
+// ---- COPY TO CLIPBOARD ----
+document.getElementById("copy-decoded").addEventListener("click", () => {
+    const outputText = document.getElementById("decode-output").textContent;
+    if (!outputText) return;
+    navigator.clipboard.writeText(outputText).then(() => {
+        alert("Decoded text copied to clipboard!");
+    });
+});
+
+
+// ---- COPY CRIB JSON TO CLIPBOARD ----
+document.getElementById("copy-json").addEventListener("click", () => {
+    const cribJson = JSON.stringify(cribData, null, 2);
+    navigator.clipboard.writeText(cribJson).then(() => {
+        alert("Crib JSON copied to clipboard!");
+    });
+});
+
+// ---- INITIALIZE ----
+loadCribTable();
+renderStack();
+</script>
+
+</body>
+</html>

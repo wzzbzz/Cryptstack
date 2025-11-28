@@ -17,9 +17,14 @@ class NativeXController extends AbstractController
 
         $text = $body['text'] ?? '';
         $stack = $body['stack'] ?? null;
+        $key = $body['key'] ?? null;
 
         if ($stack) {
             $nativex->stack = array_map('trim', explode(',', $stack));
+        }
+
+        if( $key ) {
+            $nativex->setKey($key);
         }
         
     
@@ -35,9 +40,14 @@ class NativeXController extends AbstractController
 
         $text = $body['text'] ?? '';
         $stack = $body['stack'] ?? null;
+        $key = $body['key'] ?? null;
 
         if ($stack) {
             $nativex->stack = array_map('trim', explode(',', $stack));
+        }
+
+        if( $key ) {
+            $nativex->setKey($key);
         }
 
         $decoded = $nativex->stack($text, -1);

@@ -17,14 +17,19 @@ class NativeX
     public $stack = array();
     public $teaser = "Impressive, but your message is in another castle! --->";
     public $output = "text";
+    public $key = "defaultkey";
 
     private string $pi10000;
 
-    public function __construct( array $config)
+    public function __construct(array $config)
     {
         $this->config = $config;
         $this->pi10000 = $config['pi'];
         $this->stack = array_map('trim', explode(",", $config['stack']));
+        if (isset($config['key']) && !empty($config['key'])) {
+            $this->key = $config['key'];
+        }
+        
     }
 
 
@@ -81,6 +86,7 @@ class NativeX
         //x should be a power of 2
         //how to enforce it?
         // like this :  $x is the exponent
+        // power of 2 wasn't even working - this is XOR...and it does.  Happy Accidents!
 
         $x = 2 ^ $x;
         $strray = str_split($str);
@@ -149,6 +155,9 @@ class NativeX
 
         $strray = str_split($text);
 
+        $even = array();
+        $odd = array();
+
         if ($encode == 1) {
             for ($i = 0; $i < count($strray); $i++) {
                 if ($i % 2 == 0) {
@@ -175,21 +184,23 @@ class NativeX
     }
 
 
-    function shell_shock($text, $encode = 1)
+    function shell_shock(string $text): string
     {
-        $subj = str_split($text);
-        $new = array();
-        for ($i = 0; $i < floor(count($subj) / 2); $i++) {
-            if ($i % 2 == 1) {
-                $orig = $subj[$i];
-                $repl = $subj[count($subj) - $i - 1];
-                $subj[$i] = $repl;
-                $subj[count($subj) - $i - 1] = $orig;
-            }
+        $chars = str_split($text);
+        $n     = count($chars);
+        $half  = intdiv($n, 2);
+
+        // Swap mirrored characters when index is odd
+        for ($i = 1; $i < $half; $i += 2) {
+            $j = $n - $i - 1;
+
+            // swap chars[$i] and chars[$j]
+            [$chars[$i], $chars[$j]] = [$chars[$j], $chars[$i]];
         }
 
-        return implode("", $subj);
+        return implode('', $chars);
     }
+
 
     function r($str, $encode = 1)
     {
@@ -242,12 +253,12 @@ class NativeX
         } else {
             return base64_decode($text);
         }
-    }   
+    }
 
     function bandit($text, $encode = 1)
     {
 
-        $offset = $this->generateX($this->config["key"], (94));
+        $offset = $this->generateX($this->key, (94));
         $subj = str_split($text);
 
         $crypt = array();
@@ -284,7 +295,7 @@ class NativeX
         $subj     = str_split($text);
         $map     = str_split($corpus);
         $crypt     = array();
-        $base    = $this->generateX($this->config["product"], strlen($corpus) - strlen($text));
+        $base    = $this->generateX($this->key, strlen($corpus) - strlen($text));
 
         foreach ($subj as $ix => $char) {
             $flip = ($ix % 2 == 0) ? 1 : -1;
@@ -304,12 +315,12 @@ class NativeX
 
     public function pi_shuffle($text, $encode = 1)
     {
-        
+
         $crypt = array();
         $subj = str_split($text);
         $pi = str_split($this->pi10000);
-        
-        $base = $this->generateX($this->config["product"], (1024));
+
+        $base = $this->generateX($this->key, (1024));
         foreach ($subj as $idx => $char) {
             if ($idx == 6) {
             }
@@ -333,6 +344,48 @@ class NativeX
         return $crypt_str;
     }
 
+
+    public function rot13($text, $encode = 1)
+    {
+        $subj = str_split($text);
+        $crypt = array();
+
+        foreach ($subj as $char) {
+            $code = ord($char);
+            if ($code >= 65 && $code <= 90) {
+                // Uppercase A-Z
+                $new_code = (($code - 65 + 13 * $encode) % 26) + 65;
+            } elseif ($code >= 97 && $code <= 122) {
+                // Lowercase a-z
+                $new_code = (($code - 97 + 13 * $encode) % 26) + 97;
+            } else {
+                // Non-alphabetic characters remain unchanged
+                $new_code = $code;
+            }
+            $crypt[] = chr($new_code);
+        }
+
+        return implode("", $crypt);
+    }
+
+    public function rotPosition($text, $encode = 1)
+    {
+        $subj = str_split($text);
+        $crypt = array();
+
+        foreach ($subj as $idx => $char) {
+            $code = ord($char);
+            if ($code >= 32 && $code <= 126) {
+                $new_code = (($code - 32 + ($idx + 1) * $encode) % 95) + 32;
+            } else {
+                $new_code = $code;
+            }
+            $crypt[] = chr($new_code);
+        }
+
+        return implode("", $crypt);
+    }
+
     public function stack($text, $encode = 1)
     {
         $stack = $this->stack;
@@ -352,7 +405,7 @@ class NativeX
 
     function setKey($key)
     {
-        $this->config['key'] = $key;
+        $this->key = $key;
     }
 
     public function set_output($output)

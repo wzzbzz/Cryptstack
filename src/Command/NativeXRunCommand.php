@@ -26,7 +26,8 @@ class NativeXRunCommand extends Command
         $this
             ->addArgument('mode', InputArgument::REQUIRED, 'encode or decode')
             ->addArgument('text', InputArgument::REQUIRED, 'The text to encode or decode')
-            ->addOption('stack', null, InputOption::VALUE_REQUIRED, 'Custom stack override');
+            ->addOption('stack', null, InputOption::VALUE_REQUIRED, 'Custom stack override')
+            ->addOption('key', null, InputOption::VALUE_OPTIONAL, 'any little word');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -34,17 +35,20 @@ class NativeXRunCommand extends Command
         $mode = strtolower($input->getArgument('mode'));
         $text = $input->getArgument('text');
         $stack = $input->getOption('stack');
-
+        $method = $input->getOption('method');
+        
         if ($stack) {
             $this->nativex->stack = array_map('trim', explode(',', $stack));
             $output->writeln("<info>Using custom stack: {$stack}</info>");
         }
 
         if ($mode === 'encode') {
-            $result = $this->nativex->stack($text, 1);
-        } else {
-            $result = $this->nativex->stack($text, -1);
+             $result = $this->nativex->stack($text, 1);
+         } else {
+             $result = $this->nativex->stack($text, -1);
         }
+
+        
 
         $output->writeln($result);
         return Command::SUCCESS;
