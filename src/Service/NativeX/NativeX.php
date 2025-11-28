@@ -141,6 +141,15 @@ class NativeX
         }
     }
 
+    public function SwappyBird($text, $encode)
+    {
+        if ($encode == 1) {
+            return $this->swap_tip_x($text);
+        } else {
+            return $this->swap_tip_y($text);
+        }
+    }
+
     public function split_deck($text, $encode)
     {
         if ($encode == 1) {
@@ -150,6 +159,11 @@ class NativeX
         }
     }
 
+    public function Splitter(string $text, int $encode = 1): string
+    {
+        return $this->split_deck($text, $encode);
+    }
+    
     public function straight_shuffle($text, $encode = 1)
     {
 
@@ -183,6 +197,11 @@ class NativeX
         return implode("", $shuffled);
     }
 
+    public function Straight(string $text, int $encode = 1): string
+    {
+        return $this->straight_shuffle($text, $encode);
+    }
+
 
     function shell_shock(string $text): string
     {
@@ -199,6 +218,11 @@ class NativeX
         }
 
         return implode('', $chars);
+    }
+
+    public function Chakra(string $text, int $encode = 1): string
+    {
+        return $this->shell_shock($text);
     }
 
 
@@ -279,6 +303,11 @@ class NativeX
         return $crypt_str;
     }
 
+    public function elBandito($text, $encode = 1)
+    {
+        return $this->bandit($text, $encode);
+    }
+
     function john11($text, $encode = 1)
     {
 
@@ -342,6 +371,11 @@ class NativeX
         $crypt_str = implode("", $crypt);
 
         return $crypt_str;
+    }
+
+    public function CutiePie($text, $encode = 1)
+    {
+        return $this->pi_shuffle($text, $encode);
     }
 
 
