@@ -23,6 +23,7 @@ class NativeXController extends AbstractController
             $nativex->stack = array_map('trim', explode(',', $stack));
         }
 
+
         if( $key ) {
             $nativex->setKey($key);
         }
