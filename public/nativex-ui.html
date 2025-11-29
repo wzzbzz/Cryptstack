@@ -150,7 +150,10 @@
             <option>Splitter</option>
             <option>GiveItToMeStraight</option>
             <option>elBandito</option>
+            <option>RotoRooter</option>
         </select>
+
+        <button id="clear-stack">Clear Stack</button>
 
 
 
@@ -329,6 +332,7 @@ const cribData = [
     {plain:"}", cipher:""},
     {plain:"~", cipher:""}
 ]
+
 
 
 // ---- INITIAL STACK ----
@@ -579,6 +583,12 @@ document.getElementById("copy-json").addEventListener("click", () => {
     navigator.clipboard.writeText(cribJson).then(() => {
         alert("Crib JSON copied to clipboard!");
     });
+});
+
+// ---- CLEAR STACK ----
+document.getElementById("clear-stack").addEventListener("click", () => {
+    currentStack = [];
+    renderStack();
 });
 
 // ---- INITIALIZE ----

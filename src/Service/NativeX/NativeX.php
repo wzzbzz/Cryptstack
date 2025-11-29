@@ -29,7 +29,6 @@ class NativeX
         if (isset($config['key']) && !empty($config['key'])) {
             $this->key = $config['key'];
         }
-        
     }
 
 
@@ -71,23 +70,8 @@ class NativeX
     }
 
 
-    public function password($count)
-    {
-        for ($i = 1; $i <= 3; $i++) {
-            $x = $modulo % $i;
-            $text = $this->encode($this->config['password']);
-        }
-        return substr(sha1($text), 0, $this->config["passwordlength"]);
-    }
-
-
     public function generateX($str, $x)
     {
-        //x should be a power of 2
-        //how to enforce it?
-        // like this :  $x is the exponent
-        // power of 2 wasn't even working - this is XOR...and it does.  Happy Accidents!
-
         $x = 2 ^ $x;
         $strray = str_split($str);
         $total = 0;
@@ -163,16 +147,17 @@ class NativeX
     {
         return $this->split_deck($text, $encode);
     }
-    
+
     public function straight_shuffle($text, $encode = 1)
     {
-
         $strray = str_split($text);
 
-        $even = array();
-        $odd = array();
+        $even = [];
+        $odd = [];
 
         if ($encode == 1) {
+
+            // --- ENCODE ---
             for ($i = 0; $i < count($strray); $i++) {
                 if ($i % 2 == 0) {
                     $even[] = $strray[$i];
@@ -180,24 +165,35 @@ class NativeX
                     $odd[] = $strray[$i];
                 }
             }
+
             $shuffled = array_merge($even, $odd);
         } else {
-            $split = round(count($strray) / 2);
 
-            $even =  array_slice($strray, 0, $split);
+            // --- DECODE (inverse) ---
 
-            $odd = array_slice($strray, $split);
-            $shuffled = array();
-            for ($i = 0; $i < count($even); $i++) {
-                $shuffled[] = $even[$i];
-                $shuffled[] = $odd[$i];
+            $n = count($strray);
+            $even_count = intdiv($n + 1, 2);  // ceil(n/2)
+            $odd_count  = intdiv($n, 2);      // floor(n/2)
+
+            $evens = array_slice($strray, 0, $even_count);
+            $odds  = array_slice($strray, $even_count);
+
+            $shuffled = [];
+            $ei = $oi = 0;
+
+            for ($i = 0; $i < $n; $i++) {
+                if ($i % 2 == 0) {
+                    $shuffled[] = $evens[$ei++];
+                } else {
+                    $shuffled[] = $odds[$oi++];
+                }
             }
         }
 
         return implode("", $shuffled);
     }
 
-    public function Straight(string $text, int $encode = 1): string
+    public function GiveItToMeStraight(string $text, int $encode = 1): string
     {
         return $this->straight_shuffle($text, $encode);
     }
@@ -402,23 +398,12 @@ class NativeX
         return implode("", $crypt);
     }
 
-    public function rotPosition($text, $encode = 1)
+    public function RotoRooter($text, $encode = 1)
     {
-        $subj = str_split($text);
-        $crypt = array();
-
-        foreach ($subj as $idx => $char) {
-            $code = ord($char);
-            if ($code >= 32 && $code <= 126) {
-                $new_code = (($code - 32 + ($idx + 1) * $encode) % 95) + 32;
-            } else {
-                $new_code = $code;
-            }
-            $crypt[] = chr($new_code);
-        }
-
-        return implode("", $crypt);
+        return $this->rot13($text, $encode);
     }
+
+
 
     public function stack($text, $encode = 1)
     {
