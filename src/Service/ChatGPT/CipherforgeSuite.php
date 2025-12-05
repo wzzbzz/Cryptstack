@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Service\chatGPT;
+namespace App\Service\ChatGPT;
 
 
 class CipherforgeSuite
