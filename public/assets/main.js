@@ -2,7 +2,7 @@ import { cribData } from './cribs.js';
 import { prompts } from './prompts.js';
 
 // ---- INITIAL STACK ----
-let currentStack = ["CutiePie", "Chakra", "elBandito"];
+let currentStack = ["GiveItToMeStraight"];
 
 // ---- BUILD CRIB TABLE ----
 function loadCribTable() {
