@@ -167,6 +167,9 @@ async function generateCrib() {
     }
     console.log("done");
 
+    const audio = new Audio("assets/doink.mp3");
+    audio.play();
+
     updateCribTable(results);
     updateCribData(results);
 
