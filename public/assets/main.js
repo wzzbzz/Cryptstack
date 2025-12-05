@@ -119,6 +119,14 @@ document.getElementById("add-layer").addEventListener("change", e => {
 
 async function generateCrib() {
 
+    // diable crib buttons
+    document.getElementById("copy-json").disabled = true;
+    document.getElementById("copy-full-prompt").disabled = true;
+    // disable the show crib button
+    const toggleButton = document.getElementById("toggle-crib");
+    toggleButton.disabled = true;
+    toggleButton.textContent = "Generating Crib...";
+    toggleButton.style.color = "#888";
     // clear the crib table
     loadCribTable();
 
@@ -161,6 +169,18 @@ async function generateCrib() {
 
     updateCribTable(results);
     updateCribData(results);
+
+    // enable crib buttons
+    document.getElementById("copy-json").disabled = false;
+    document.getElementById("copy-full-prompt").disabled = false;
+    // enable the show crib button
+    document.getElementById("toggle-crib").disabled = false;
+
+    const cribDiv = document.getElementById('crib');
+    toggleButton.textContent = cribDiv.classList.contains('closed')
+        ? 'Show Crib Sheet'
+        : 'Hide Crib Sheet';
+    toggleButton.style.color = "";
 
 }
 

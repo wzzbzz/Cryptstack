@@ -47,7 +47,7 @@ class ChatGPTRunCommand extends Command
         if ($mode === 'encode') {
              $result = $this->cipherforgeSuite->stack($text, 1);
          } else {
-             $result = $this->nativex->stack($text, -1);
+             $result = $this->cipherforgeSuite->stack($text, -1);
         }
 
         

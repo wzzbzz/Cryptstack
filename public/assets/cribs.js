@@ -272,7 +272,5 @@ export const cribData = [
         { plain: "helloworldthisisatesthelloworldthisisates", cipher: "" }
     ]
 
-
-
 ];
 /* ---- END CRIB SHEET DATA ---- */
