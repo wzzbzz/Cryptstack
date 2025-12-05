@@ -2,21 +2,22 @@
 
 namespace App\Command;
 
-use App\Service\NativeX\NativeX;
+use App\Service\ChatGPT\CipherforgeSuite;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(
-    name: 'nativex:run',
-    description: 'Encode or decode text using the NativeX cipher engine'
+    name: 'gpt:run',
+    description: '',
 )]
-class NativeXRunCommand extends Command
+class ChatGPTRunCommand extends Command
 {
-    public function __construct(private NativeX $nativex)
+    public function __construct(private CipherforgeSuite $cipherforgeSuite)
     {
         parent::__construct();
     }
@@ -28,6 +29,7 @@ class NativeXRunCommand extends Command
             ->addArgument('text', InputArgument::REQUIRED, 'The text to encode or decode')
             ->addOption('stack', null, InputOption::VALUE_REQUIRED, 'Custom stack override')
             ->addOption('key', null, InputOption::VALUE_OPTIONAL, 'any little word');
+        
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -38,12 +40,12 @@ class NativeXRunCommand extends Command
         //$method = $input->getOption('method');
         
         if ($stack) {
-            $this->nativex->stack = array_map('trim', explode(',', $stack));
+            $this->cipherforgeSuite->setStack(array_map('trim', explode(',', $stack)));
             $output->writeln("<info>Using custom stack: {$stack}</info>");
         }
 
         if ($mode === 'encode') {
-             $result = $this->nativex->stack($text, 1);
+             $result = $this->cipherforgeSuite->stack($text, 1);
          } else {
              $result = $this->nativex->stack($text, -1);
         }

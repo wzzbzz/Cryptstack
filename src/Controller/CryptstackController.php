@@ -24,4 +24,20 @@ final class CryptstackController extends AbstractController
             ['Content-Type' => 'text/html']
         );
     }
+
+    #[Route('/suite', name: 'app_cryptstack_suite')]
+    public function suite(): Response
+    {
+        $filePath = $this->getParameter('kernel.project_dir') . '/public/suite-ui.html';
+
+        if (!file_exists($filePath)) {
+            return new Response("Suite UI file not found", 404);
+        }
+
+        return new Response(
+            file_get_contents($filePath),
+            200,
+            ['Content-Type' => 'text/html']
+        );
+    }
 }

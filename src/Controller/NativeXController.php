@@ -55,4 +55,32 @@ class NativeXController extends AbstractController
 
         return new JsonResponse(['decoded' => $decoded]);
     }
+
+    #[Route('/batch', methods: ['POST'])]
+    public function batch(Request $request, NativeX $nativex): JsonResponse
+    {
+        $body = json_decode($request->getContent(), true);
+
+        $texts = $body['texts'] ?? [];
+        $operation = $body['operation'] ?? 'encode';
+        $stack = $body['stack'] ?? null;
+        $key = $body['key'] ?? null;
+
+        if ($stack) {
+            $nativex->stack = array_map('trim', explode(',', $stack));
+        }
+
+        if ($key) {
+            $nativex->setKey($key);
+        }
+
+        $direction = $operation === 'decode' ? -1 : 1;
+        $results = [];
+
+        foreach ($texts as $text) {
+            $results[] = $nativex->stack($text, $direction);
+        }
+
+        return new JsonResponse(['results' => $results]);
+    }
 }
